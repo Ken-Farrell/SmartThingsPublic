@@ -34,16 +34,16 @@ definition(
 	appSetting "devOpt"
 }
 
-def appVersion() { "5.5.1" }
-def appVerDate() { "09-08-2018" }
+def appVersion() { "5.5.6" }
+def appVerDate() { "1l-11-2018" }
 def minVersions() {
 	return [
-		"automation":["val":544, "desc":"5.4.4"],
-		"thermostat":["val":541, "desc":"5.4.1"],
-		"protect":["val":541, "desc":"5.4.1"],
-		"presence":["val":541, "desc":"5.4.1"],
-		"weather":["val":541, "desc":"5.4.1"],
-		"camera":["val":541, "desc":"5.4.1"],
+		"automation":["val":547, "desc":"5.4.7"],
+		"thermostat":["val":543, "desc":"5.4.3"],
+		"protect":["val":542, "desc":"5.4.2"],
+		"presence":["val":542, "desc":"5.4.2"],
+		"weather":["val":542, "desc":"5.4.2"],
+		"camera":["val":543, "desc":"5.4.3"],
 		"stream":["val":201, "desc":"2.0.1"]
 	]
 }
@@ -322,8 +322,9 @@ def mainPage() {
 
 // NEW STORAGE SmartApp
 def storageInfoSect() {
-	if(!atomicState?.isInstalled || isAppLiteMode() || (stateSz < 55)) { return "" }
-	def storApp = getStorageApp()
+	//Integer stateSz = getStateSizePerc()
+	//if(!atomicState?.isInstalled || isAppLiteMode() || (stateSz < 50)) { return "" }
+	def storApp = getStorageApp(false)
 	section("Storage App Info:") {
 		if(storApp) {
 			def str = ""
@@ -376,8 +377,8 @@ public storageAppInst(Boolean available) {
 
 private getStorageApp(honorState = true) {
 	Integer stateSz = getStateSizePerc()
-	if(honorState && stateSz < 55) { return null }
-	if(isAppLiteMode()) { return null }
+	if(honorState && stateSz < 50) { return null }
+	if(honorState && isAppLiteMode()) { return null }
 	def storApp = getChildApps()?.find { it?.getAutomationType() == "storage" && it?.name == autoAppName() }
 	if(storApp) {
 		if(storApp?.label != getStorageAppChildLabel()) { storApp?.updateLabel(getStorageAppChildLabel()) }
@@ -574,7 +575,7 @@ def devPrefPage() {
 		}
 		if(atomicState?.cameras) {
 			section("Camera Devices:") {
-				if(getDevOpt() || betaMarker()) {
+			//	if(getDevOpt() || betaMarker()) {
 					input "camTakeSnapOnEvt", "bool", title: "Take Snapshot on Motion Events?", required: false, defaultValue: true, submitOnChange: true, image: getAppImg("snapshot_icon.png")
 					input "motionSndChgWaitVal", "enum", title: "Delay before Motion/Sound Events are marked Inactive?", required: false, defaultValue: 60, metadata: [values:waitValAltEnum(true)], submitOnChange: true, image: getAppImg("delay_time_icon.png")
 					input "camEnMotionZoneFltr", "bool", title: "Allow filtering motion events by configured zones?", required: false, defaultValue: false, submitOnChange: true, image: getAppImg("motion_icon.png")
@@ -584,9 +585,9 @@ def devPrefPage() {
 						href "camMotionZoneFltrPage", title: "Restrict Motion to Certain Zones?", description: t0, params: [devices: atomicState?.cameras.sort{it?.value}, camZones: camZones], image: getAppImg("zone_icon.png"), state: (t0 ? "complete" : "")
 					}
 					atomicState.needChildUpd = true
-				} else {
-					paragraph "No Camera Device Options Yet..."
-				}
+			//	} else {
+			//		paragraph "No Camera Device Options Yet..."
+			//	}
 			}
 		}
 		if(atomicState?.protects) {
@@ -808,7 +809,7 @@ def isAppLiteMode() {
 
 def showDevSharePrefs() {
 	section("Share Data with Developer:") {
-		paragraph title: "What is this used for?", "These options send non-user identifiable information and error data to diagnose catch trending issues."
+		paragraph title: "What is this used for?", "These options send non-user identifiable information and error data to diagnose or catch trending issues."
 		input ("optInAppAnalytics", "bool", title: "Send Install Data?", required: false, defaultValue: true, submitOnChange: true, image: getAppImg("app_analytics_icon.png"))
 		input ("optInSendExceptions", "bool", title: "Send Error Data?", required: false, defaultValue: true, submitOnChange: true, image: getAppImg("diag_icon.png"))
 		if(settings?.optInAppAnalytics != false) {
@@ -1466,10 +1467,10 @@ def notifPrefPage() {
 	def execTime = now()
 	dynamicPage(name: "notifPrefPage", install: false) {
 		section("Enable Text Messaging:") {
-			input "phones", "phone", title: "Send SMS to Number\n(Optional)", required: false, submitOnChange: true, image: getAppImg("notification_icon2.png")
+			input "phone", "phone", title: "Send SMS to Number\n(Optional)", required: false, submitOnChange: true, image: getAppImg("notification_icon2.png")
 		}
 		section("Enable Push Messages:") {
-			input "usePush", "bool", title: "Send Push Notitifications\n(Optional)", required: false, submitOnChange: true, defaultValue: false, image: getAppImg("notification_icon.png")
+			input "usePush", "bool", title: "Send Push Notifications\n(Optional)", required: false, submitOnChange: true, defaultValue: false, image: getAppImg("notification_icon.png")
 		}
 		section("Enable Pushover Support:") {
 			input ("pushoverEnabled", "bool", title: "Use Pushover Integration", required: false, submitOnChange: true, image: getAppImg("pushover_icon.png"))
@@ -1953,7 +1954,7 @@ private diagLogProcChange(setOn) {
 def getRemDiagActSec() { return !getTimestampVal("remDiagLogActivatedDt") ? 100000 : GetTimeDiffSeconds(getTimestampVal("remDiagLogActivatedDt"), null, "getRemDiagActSec").toInteger() }
 def getLastRemDiagSentSec() { return !atomicState?.remDiagDataSentDt ? 1000 : GetTimeDiffSeconds(atomicState?.remDiagDataSentDt, null, "getLastRemDiagSentSec").toInteger() }
 
-def changeLogPage () {
+def changeLogPage() {
 	def execTime = now()
 	dynamicPage(name: "changeLogPage", title: "", nextPage: "mainPage", install: false) {
 		section() {
@@ -2304,7 +2305,7 @@ def initBuiltin(btype) {
 			autoStr = "storage"
 			keepApp = true
 			def stateSz = getStateSizePerc()
-			if(stateSz < 59) { keepApp = false }
+			if(stateSz < 50) { keepApp = false }
 			else {
 				def kdata = getState()?.findAll { (it?.key in [ "curWeather", "curForecast", "curAstronomy", "curAlerts" ]) }
 				kdata.each { kitem ->
@@ -3617,21 +3618,21 @@ def getApiData(type = null) {
 						atomicState.structName = newStrucName ?: atomicState?.structName
 						locationPresNotify(getLocationPresence())
 					}
-					incApiStrReqCnt()
+					incrementCntByKey("apiStrReqCnt")
 				}
 				else if(type == "dev") {
 					def t0 = resp?.data
 					//LogTrace("API Device Resp.Data: ${t0}")
 					def chg = didChange(atomicState?.deviceData, t0, "dev", "poll")
 					if(chg) { result = true }
-					incApiDevReqCnt()
+					incrementCntByKey("apiDevReqCnt")
 				}
 				else if(type == "meta") {
 					//LogTrace("API Metadata Resp.Data: ${resp?.data}")
 					def nresp = resp?.data?.metadata
 					def chg = didChange(atomicState?.metaData, nresp, "meta", "poll")
 					if(chg) { result = true }
-					incApiMetaReqCnt()
+					incrementCntByKey("apiMetaReqCnt")
 				}
 			} else {
 				LogAction("getApiData - ${type} Received: Resp (${resp?.status})", "error", true)
@@ -3726,7 +3727,7 @@ def procNestResponse(resp, data) {
 					locationPresNotify(getLocationPresence())
 				}
 				atomicState.qstrRequested = false
-				incApiStrReqCnt()
+				incrementCntByKey("apiStrReqCnt")
 			}
 			if(type == "dev") {
 				def t0 = resp?.json
@@ -3736,7 +3737,7 @@ def procNestResponse(resp, data) {
 					dev = true
 				}
 				atomicState.qdevRequested = false
-				incApiDevReqCnt()
+				incrementCntByKey("apiDevReqCnt")
 			}
 			if(type == "meta") {
 				def nresp = resp?.json?.metadata
@@ -3745,7 +3746,7 @@ def procNestResponse(resp, data) {
 				if(chg) {
 					meta = true
 				}
-				incApiMetaReqCnt()
+				incrementCntByKey("apiMetaReqCnt")
 			}
 		} else {
 			def tstr = (type == "str") ? "Structure" : ((type == "dev") ? "Device" : "Metadata")
@@ -3852,7 +3853,7 @@ def receiveEventData(eventData=null) {
 			apiIssueEvent(false)
 			atomicState?.apiRateLimited = false
 			atomicState?.apiCmdFailData = null
-			incRestStrEvtCnt()
+			incrementCntByKey("apiRestStrEvtCnt")
 		}
 		if(atomicState?.forceChildUpd || atomicState?.needChildUpd || devChgd) {
 			schedFinishPoll(devChgd)
@@ -4389,13 +4390,13 @@ def updateChildData(force = false) {
 					def automationChildApp = getChildApps().find{ it.id == atomicState?."vThermostatChildAppId${devId}" }
 					if(automationChildApp != null && !automationChildApp.getIsAutomationDisabled()) {
 						def tempC = 0.0
-						def tempF = 0
+						def tempF = 0.0
 						if(getTemperatureScale() == "C") {
 							tempC = automationChildApp.getRemoteSenTemp()
-							tempF = (tempC * (9 / 5) + 32) as Integer
+							tempF = (tempC * (9 / 5) + 32.0)
 						} else {
 							tempF = automationChildApp.getRemoteSenTemp()
-							tempC = (tempF - 32) * (5 / 9) as Double
+							tempC = (tempF - 32.0) * (5 / 9) as Double
 						}
 						data?.ambient_temperature_c = tempC
 						data?.ambient_temperature_f = tempF
@@ -5428,7 +5429,7 @@ def nestCmdResponse(resp, data) {
 		if(resp?.status == 200) {
 			LogAction("nestCmdResponse | Processed Queue: ${qnum} | Obj: ($type{$obj:$objVal}) SUCCESSFULLY!", "info", true)
 			apiIssueEvent(false)
-			incCmdCnt()
+			incrementCntByKey("apiCommandCnt")
 			atomicState?.lastCmdSentStatus = "ok"
 			atomicState?.apiRateLimited = false
 			atomicState?.apiCmdFailData = null
@@ -5509,7 +5510,7 @@ def procNestApiCmd(uri, typeId, type, obj, objVal, qnum, origcmd, redir = false)
 			else if(resp?.status == 200) {
 				LogAction("${myStr} Processed queue: ${qnum} ($type{$obj:$objVal}) SUCCESSFULLY!", "info", true)
 				apiIssueEvent(false)
-				incCmdCnt()
+				incrementCntByKey("apiCommandCnt")
 				atomicState?.lastCmdSentStatus = "ok"
 				atomicState?.apiRateLimited = false
 				atomicState?.apiCmdFailData = null
@@ -5599,46 +5600,12 @@ def apiRespHandler(code, errJson, methodName, tstr=null, isCmd=false) {
 	}
 }
 
-def incApiStrReqCnt() {
-	long reqCnt = atomicState?.apiStrReqCnt ?: 0
-	reqCnt = reqCnt?.toLong()+1
-	LogTrace("ApiStrReqCnt: $reqCnt")
-	atomicState?.apiStrReqCnt = reqCnt?.toLong()
-}
-
-def incApiDevReqCnt() {
-	long reqCnt = atomicState?.apiDevReqCnt ?: 0
-	reqCnt = reqCnt?.toLong()+1
-	LogTrace("ApiDevReqCnt: $reqCnt")
-	atomicState?.apiDevReqCnt = reqCnt?.toLong()
-}
-
-def incApiMetaReqCnt() {
-	long reqCnt = atomicState?.apiMetaReqCnt ?: 0
-	reqCnt = reqCnt?.toLong()+1
-	LogTrace("ApiMetaReqCnt: $reqCnt")
-	atomicState?.apiMetaReqCnt = reqCnt?.toLong()
-}
-
-def incCmdCnt() {
-	long cmdCnt = atomicState?.apiCommandCnt ?: 0
-	cmdCnt = cmdCnt?.toLong()+1
-	LogTrace("Api CmdCnt: $cmdCnt")
-	atomicState?.apiCommandCnt = cmdCnt?.toLong()
-}
-
-def incRestStrEvtCnt() {
-	long evtCnt = atomicState?.apiRestStrEvtCnt ?: 0
-	evtCnt = evtCnt?.toLong()+1
-	LogTrace("ApiRestStrEvtCnt: $evtCnt")
-	atomicState?.apiRestStrEvtCnt = evtCnt?.toLong()
-}
-
-def incAppNotifSentCnt() {
-	long notCnt = atomicState?.appNotifSentCnt ?: 0
-	notCnt = notCnt?.toLong()+1
-	LogTrace("AppNotifSentCnt: $notCnt")
-	atomicState?.appNotifSentCnt = notCnt?.toLong()
+private incrementCntByKey(String key) {
+	long evtCnt = atomicState?."${key}" ?: 0
+	// evtCnt = evtCnt?.toLong()+1
+	evtCnt++
+	LogTrace("${key?.toString()?.capitalize()}: $evtCnt")
+	atomicState?."${key}" = evtCnt?.toLong()
 }
 
 /*
@@ -5954,7 +5921,7 @@ def sendMsg(String msgType, String msg, Boolean showEvt=true, Map pushoverMap=nu
 				//atomicState?.lastMsg = flatMsg
 				//atomicState?.lastMsgDt = getDtNow()
 				LogAction("sendMsg: Sent ${sentstr} (${flatMsg})", "debug", true)
-				incAppNotifSentCnt()
+				incrementCntByKey("appNotifSentCnt")
 			}
 		}
 	} catch (ex) {
@@ -6090,17 +6057,25 @@ def getWeatherConditions(force = false) {
 }
 
 def getWeatherData(dataName) {
-	def storageApp = getStorageApp()
-	if(storageApp && !isAppLiteMode()) {
-		def t0 = getStorageVal(dataName)
+	def storageApp = getStorageApp(false)
+	def stateSz = getStateSizePerc()
+	def t1 = isAppLiteMode()
+	if(storageApp && (stateSz < 46 || t1)) {
+		initStorageApp() // should delete storageapp
+	}
+	storageApp = getStorageApp()
+	if(storageApp && !t1) {
+		def t0 = findStateStorageVal(dataName)
 		if(t0) {
 			return t0
 		} else { if(getWeatherConditions(true)) { return getStorageVal(dataName) } }
 	} else {
-		if(!isAppLiteMode() ) {
-			def stateSz = getStateSizePerc()
-			if(stateSz > 60) {
-				log.warn "storageApp not found getWeatherData"
+		if(stateSz > 62) {
+			LogAction("storageApp not found getWeatherData ${stateSz}%", "warn", true)
+		}
+		if(!t1) {
+			if(stateSz > 62) {
+				initStorageApp() // should create storage App
 			}
 		}
 		if(atomicState?."$dataName") {
@@ -8110,7 +8085,7 @@ def strCapitalize(str) {
 
 def getInputEnumLabel(inputName, enumName) {
 	def result = "Not Set"
-	if(input && enumName) {
+	if(inputName && enumName) {
 		enumName.each { item ->
 			if(item?.key.toString() == inputName?.toString()) {
 				result = item?.value
