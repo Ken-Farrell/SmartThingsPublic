@@ -569,5 +569,3 @@ def auto() {
 def fanAuto() {
 	log.debug "${device.displayName} does not support fan auto"
 }
-
-
